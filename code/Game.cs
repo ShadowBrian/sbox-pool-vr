@@ -55,6 +55,26 @@ namespace Facepunch.Pool
 			Global.PhysicsSubSteps = 10;
 		}
 
+		public override void PostCameraSetup( ref CameraSetup camSetup )
+		{
+			if ( Local.Pawn != null )
+			{
+				// VR anchor default is at the pawn's location
+				//VR.Anchor = Local.Pawn.Transform;
+
+				Local.Pawn.PostCameraSetup( ref camSetup );
+			}
+
+			if ( Input.VR.IsActive )
+				camSetup.ZNear = 2.5f;
+			//
+			// Position any viewmodels
+			//
+			BaseViewModel.UpdateAllPostCamera( ref camSetup );
+
+			CameraModifier.Apply( ref camSetup );
+		}
+
 		public async Task RespawnBallAsync( PoolBall ball, bool shouldAnimate = false )
 		{
 			if ( shouldAnimate )
@@ -70,7 +90,7 @@ namespace Facepunch.Pool
 					{
 						ball.Scale = 1f;
 						ball.Position = spawner.Position;
-						ball.RenderColor = ball.RenderColor.WithAlpha(1.0f);
+						ball.RenderColor = ball.RenderColor.WithAlpha( 1.0f );
 						ball.PhysicsBody.AngularVelocity = Vector3.Zero;
 						ball.PhysicsBody.Velocity = Vector3.Zero;
 						ball.PhysicsBody.ClearForces();
@@ -211,7 +231,7 @@ namespace Facepunch.Pool
 			//FileSystem.Mounted.WriteAllText( "data/pool/ratings.json", JsonSerializer.Serialize( _ratings ) );
 		}
 
-		public void ChangeRound(BaseRound round)
+		public void ChangeRound( BaseRound round )
 		{
 			Assert.NotNull( round );
 
@@ -222,7 +242,7 @@ namespace Facepunch.Pool
 
 		public async Task StartSecondTimer()
 		{
-			while (true)
+			while ( true )
 			{
 				await Task.DelaySeconds( 1 );
 				OnSecond();
@@ -283,6 +303,14 @@ namespace Facepunch.Pool
 				player.Elo.Rating = rating;
 
 			client.Pawn = player;
+
+			if ( Input.VR.IsActive )
+			{
+				player.VRPlayer = new VRPlayer();
+				player.VRPlayer.Owner = player;
+				player.VRPlayer.Predictable = true;
+				player.VRPlayer.Position = Vector3.Zero - Vector3.Up * 33f;
+			}
 
 			Round?.OnPlayerJoin( player );
 
@@ -355,7 +383,7 @@ namespace Facepunch.Pool
 
 		private void CheckMinimumPlayers()
 		{
-			if ( Client.All.Count >= MinPlayers)
+			if ( Client.All.Count >= MinPlayers )
 			{
 				if ( Round is LobbyRound || Round == null )
 				{
