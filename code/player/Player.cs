@@ -9,7 +9,7 @@ namespace Facepunch.Pool
 		[Net] public TimeSince TimeSinceWhiteStruck { get; private set; }
 		[Net] public bool HasStruckWhiteBall { get; set; }
 		[Net] public PoolBallType BallType { get; set; }
-		[Net] public bool IsSpectator { get; private set;  }
+		[Net] public bool IsSpectator { get; private set; }
 		[Net] public FoulReason FoulReason { get; private set; }
 		[Net] public bool IsPlacingWhiteBall { get; private set; }
 		[Net] public bool HasSecondShot { get; set; }
@@ -18,6 +18,8 @@ namespace Facepunch.Pool
 		[Net] public EloScore Elo { get; private set; }
 		public bool DidHitOwnBall { get; set; }
 		public bool DidPotBall { get; set; }
+
+		[Net] public VRPlayer VRPlayer { get; set; }
 
 		public int BallsLeft
 		{
@@ -116,7 +118,7 @@ namespace Facepunch.Pool
 			Score = 0;
 		}
 
-		public void StartTurn(bool hasSecondShot = false, bool showMessage = true)
+		public void StartTurn( bool hasSecondShot = false, bool showMessage = true )
 		{
 			Log.Info( "Starting Turn: " + Client.Name );
 
@@ -159,6 +161,11 @@ namespace Facepunch.Pool
 		public override void Simulate( Client client )
 		{
 			Game.Instance.Round?.UpdatePlayerPosition( this );
+
+			if ( VRPlayer != null )
+			{
+				VRPlayer.Simulate( client );
+			}
 
 			base.Simulate( client );
 		}
