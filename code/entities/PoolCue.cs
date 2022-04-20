@@ -46,7 +46,7 @@ namespace Facepunch.Pool
 		public override void Simulate( Client client )
 		{
 			var whiteBall = Game.Instance.WhiteBall;
-			
+
 			EnableDrawing = false;
 
 			if ( !IsOwnerInPlay( whiteBall, out var controller ) )
@@ -58,28 +58,59 @@ namespace Facepunch.Pool
 				return;
 			}
 
-			if ( !Input.Down( InputButton.Attack1 ) )
-			{
-				UpdateAimDir( controller, whiteBall.Position );
 
-				if ( !IsMakingShot )
+			if ( client.IsUsingVr )
+			{
+				if ( Input.VR.RightHand.Trigger.Value < 0.5f )
 				{
-					RotateCue( whiteBall );
+					UpdateAimDir( controller, whiteBall.Position );
+
+					if ( !IsMakingShot )
+					{
+						RotateCue( whiteBall );
+					}
+					else
+					{
+						if ( Host.IsServer )
+							TakeShot( controller, whiteBall );
+
+						_cuePullBackOffset = 0f;
+						IsMakingShot = false;
+						ShotPower = 0f;
+					}
 				}
 				else
 				{
-					if ( Host.IsServer )
-						TakeShot( controller, whiteBall );
-
-					_cuePullBackOffset = 0f;
-					IsMakingShot = false;
-					ShotPower = 0f;
+					HandlePowerSelection( controller );
 				}
 			}
 			else
 			{
-				HandlePowerSelection( controller );
+
+				if ( !Input.Down( InputButton.Attack1 ) )
+				{
+					UpdateAimDir( controller, whiteBall.Position );
+
+					if ( !IsMakingShot )
+					{
+						RotateCue( whiteBall );
+					}
+					else
+					{
+						if ( Host.IsServer )
+							TakeShot( controller, whiteBall );
+
+						_cuePullBackOffset = 0f;
+						IsMakingShot = false;
+						ShotPower = 0f;
+					}
+				}
+				else
+				{
+					HandlePowerSelection( controller );
+				}
 			}
+
 
 			EnableDrawing = true;
 			Position = whiteBall.Position - Rotation.Forward * (1f + _cuePullBackOffset + (CuePitch * 0.04f));
@@ -111,7 +142,7 @@ namespace Facepunch.Pool
 			{
 				ShowWhiteArea( true );
 				return;
-			}	
+			}
 			else
 			{
 				ShowWhiteArea( false );
@@ -212,6 +243,17 @@ namespace Facepunch.Pool
 				.WorldOnly()
 				.Run();
 
+			if ( Input.VR.IsActive )
+			{
+				Transform pointerTransform = controller.VRPlayer.RH.GetAttachment( "pointer" ).Value;
+
+				DebugOverlay.Line( pointerTransform.Position, pointerTransform.Position + pointerTransform.Rotation.Forward * 1000f );
+
+				cursorTrace = Trace.Ray( pointerTransform.Position, pointerTransform.Position + pointerTransform.Rotation.Forward * 1000f )
+				.WorldOnly()
+				.Run();
+			}
+
 			var whiteArea = Game.Instance.WhiteArea;
 			var whiteAreaWorldOBB = whiteArea.CollisionBounds.ToWorldSpace( whiteArea );
 
@@ -219,25 +261,56 @@ namespace Facepunch.Pool
 
 			if ( Input.Released( InputButton.Attack1 ) )
 				controller.StopPlacingWhiteBall();
+
+			if ( Input.VR.RightHand.ButtonA.IsPressed )
+			{
+				controller.StopPlacingWhiteBall();
+			}
 		}
 
 		private void HandlePowerSelection( Player controller )
 		{
-			var cursorPlaneEndPos = controller.EyePosition + Input.Cursor.Direction * 350f;
-			var distanceToCue = cursorPlaneEndPos.Distance( Position - Rotation.Forward * 100f );
-			var cuePullBackDelta = (_lastPowerDistance - distanceToCue) * Time.Delta * 20f;
 
-			if ( !IsMakingShot )
+
+			if ( Input.VR.IsActive )
 			{
-				_lastPowerDistance = 0f;
-				cuePullBackDelta = 0f;
+				Transform pointerTransform = controller.VRPlayer.RH.Transform;
+
+				var cursorPlaneEndPos = pointerTransform.Position - Vector3.Up * 350f;
+
+				var distanceToCue = cursorPlaneEndPos.Distance( Position - Rotation.Forward * 100f );
+
+				var cuePullBackDelta = (_lastPowerDistance - distanceToCue) * Time.Delta * 20f;
+
+				if ( !IsMakingShot )
+				{
+					_lastPowerDistance = 0f;
+					cuePullBackDelta = 0f;
+				}
+
+				_cuePullBackOffset = Math.Clamp( _cuePullBackOffset + cuePullBackDelta, 0f, 8f );
+				_lastPowerDistance = distanceToCue;
+
+				IsMakingShot = true;
+				ShotPower = _cuePullBackOffset.AsPercentMinMax( 0f, 8f );
 			}
+			else
+			{
+				var cursorPlaneEndPos = controller.EyePosition + Input.Cursor.Direction * 350f;
+				var distanceToCue = cursorPlaneEndPos.Distance( Position - Rotation.Forward * 100f );
+				var cuePullBackDelta = (_lastPowerDistance - distanceToCue) * Time.Delta * 20f;
+				if ( !IsMakingShot )
+				{
+					_lastPowerDistance = 0f;
+					cuePullBackDelta = 0f;
+				}
 
-			_cuePullBackOffset = Math.Clamp( _cuePullBackOffset + cuePullBackDelta, 0f, 8f );
-			_lastPowerDistance = distanceToCue;
+				_cuePullBackOffset = Math.Clamp( _cuePullBackOffset + cuePullBackDelta, 0f, 8f );
+				_lastPowerDistance = distanceToCue;
 
-			IsMakingShot = true;
-			ShotPower = _cuePullBackOffset.AsPercentMinMax( 0f, 8f );
+				IsMakingShot = true;
+				ShotPower = _cuePullBackOffset.AsPercentMinMax( 0f, 8f );
+			}
 		}
 
 		private bool UpdateAimDir( Player controller, Vector3 ballCenter )
@@ -246,6 +319,12 @@ namespace Facepunch.Pool
 
 			var tablePlane = new Plane( ballCenter, Vector3.Up );
 			var hitPos = tablePlane.Trace( new Ray( controller.EyePosition, Input.Cursor.Direction ), true );
+
+			if ( Input.VR.IsActive )
+			{
+				Transform pointerTransform = controller.VRPlayer.RH.GetAttachment( "pointer" ).Value;
+				hitPos = tablePlane.Trace( new Ray( Input.VR.Head.Position, Input.VR.Head.Position - pointerTransform.Position ), true );
+			}
 
 			if ( !hitPos.HasValue ) return false;
 

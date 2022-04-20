@@ -1,7 +1,7 @@
 {
-  "Title": "Pool",
+  "Title": "Pool with VR support",
   "Type": "game",
-  "Org": "facepunch",
+  "Org": "shadb",
   "Ident": "pool",
   "Schema": 1,
   "HasAssets": true,
