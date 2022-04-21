@@ -49,12 +49,22 @@ namespace Facepunch.Pool
 			if ( IsServer )
 			{
 				LoadRatings();
-				Hud = new();
 			}
 
-			Global.PhysicsSubSteps = 10;
-		}
+			if ( IsClient )
+			{
+				if ( !Input.VR.IsActive )
+				{
+					Local.Hud = new Hud();
+				}
+				else
+				{
+					Local.Hud = new HudVR();
+				}
 
+				Global.PhysicsSubSteps = 10;
+			}
+		}
 		public override void PostCameraSetup( ref CameraSetup camSetup )
 		{
 			if ( Local.Pawn != null )
