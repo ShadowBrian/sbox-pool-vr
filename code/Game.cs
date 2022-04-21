@@ -61,9 +61,9 @@ namespace Facepunch.Pool
 				{
 					Local.Hud = new HudVR();
 				}
-
-				Global.PhysicsSubSteps = 10;
 			}
+
+			Global.PhysicsSubSteps = 10;
 		}
 		public override void PostCameraSetup( ref CameraSetup camSetup )
 		{
