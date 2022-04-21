@@ -67,7 +67,10 @@ namespace Facepunch.Pool
 
 					if ( !IsMakingShot )
 					{
+						//Rotation = controller.VRPlayer.RH.Rotation;
 						RotateCue( whiteBall );
+
+						//Position = controller.VRPlayer.RH.Position + Rotation.Forward * 20f;
 					}
 					else
 					{
@@ -78,10 +81,13 @@ namespace Facepunch.Pool
 						IsMakingShot = false;
 						ShotPower = 0f;
 					}
+
+
 				}
 				else
 				{
 					HandlePowerSelection( controller );
+
 				}
 			}
 			else
@@ -113,6 +119,7 @@ namespace Facepunch.Pool
 
 
 			EnableDrawing = true;
+
 			Position = whiteBall.Position - Rotation.Forward * (1f + _cuePullBackOffset + (CuePitch * 0.04f));
 
 			// Never interpolate just update its position immediately for everybody.
@@ -276,9 +283,13 @@ namespace Facepunch.Pool
 			{
 				Transform pointerTransform = controller.VRPlayer.RH.Transform;
 
-				var cursorPlaneEndPos = pointerTransform.Position - Vector3.Up * 350f;
+				DebugOverlay.Line( pointerTransform.Position, pointerTransform.Position + pointerTransform.Rotation.Forward * 1000f );
 
-				var distanceToCue = cursorPlaneEndPos.Distance( Position - Rotation.Forward * 100f );
+				var tablePlane = new Plane( Position, Vector3.Up );
+
+				var cursorPlaneEndPos = tablePlane.Trace( new Ray( pointerTransform.Position, pointerTransform.Rotation.Forward ), true );
+
+				var distanceToCue = cursorPlaneEndPos.Value.Distance( Position - Rotation.Forward * 100f );
 
 				var cuePullBackDelta = (_lastPowerDistance - distanceToCue) * Time.Delta * 20f;
 
@@ -322,8 +333,10 @@ namespace Facepunch.Pool
 
 			if ( Input.VR.IsActive )
 			{
-				Transform pointerTransform = controller.VRPlayer.RH.GetAttachment( "pointer" ).Value;
-				hitPos = tablePlane.Trace( new Ray( Input.VR.Head.Position, Input.VR.Head.Position - pointerTransform.Position ), true );
+				Transform pointerTransform = controller.VRPlayer.RH.Transform;
+				hitPos = tablePlane.Trace( new Ray( pointerTransform.Position, pointerTransform.Rotation.Forward ), true );
+
+				DebugOverlay.Line( pointerTransform.Position, hitPos.HasValue ? hitPos.Value : pointerTransform.Position + pointerTransform.Rotation.Forward * 100f, Color.Green );
 			}
 
 			if ( !hitPos.HasValue ) return false;
