@@ -53,7 +53,7 @@ namespace Facepunch.Pool
 
 			if ( IsClient )
 			{
-				if ( !Input.VR.IsActive )
+				if ( !Global.IsRunningInVR )
 				{
 					Local.Hud = new Hud();
 				}
