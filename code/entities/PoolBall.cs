@@ -112,7 +112,7 @@ namespace Facepunch.Pool
 
 			var worldOBB = CollisionBounds + worldPos;
 
-			foreach (var ball in All.OfType<PoolBall>())
+			foreach ( var ball in All.OfType<PoolBall>() )
 			{
 				if ( ball != this )
 				{
@@ -151,6 +151,17 @@ namespace Facepunch.Pool
 			}
 		}
 
+
+		[ClientRpc]
+		public void DoHapticRumble( float powerFraction )
+		{
+			if ( Input.VR.IsActive )
+			{
+				Input.VR.RightHand.TriggerHapticVibration( Time.Delta, Math.Clamp( powerFraction * 320f, 0f, 320f ), Math.Clamp( powerFraction, 0f, 1f ) );
+				Input.VR.LeftHand.TriggerHapticVibration( Time.Delta, Math.Clamp( powerFraction * 320f, 0f, 320f ), Math.Clamp( powerFraction, 0f, 1f ) );
+			}
+		}
+
 		protected override void OnPhysicsCollision( CollisionEventData eventData )
 		{
 			// Our last striker is the one responsible for this collision.
@@ -162,6 +173,7 @@ namespace Facepunch.Pool
 				var sound = PlaySound( "ball-collide" );
 				sound.SetPitch( Rand.Float( 0.9f, 1f ) );
 				sound.SetVolume( (1f / 100f) * eventData.Speed );
+				DoHapticRumble( (1f / 100f) * eventData.Speed );
 			}
 			else
 			{
@@ -170,8 +182,11 @@ namespace Facepunch.Pool
 					var sound = PlaySound( "ball-hit-side" );
 					sound.SetPitch( Rand.Float( 0.9f, 1f ) );
 					sound.SetVolume( (1f / 100f) * eventData.Speed );
+					DoHapticRumble( (1f / 100f) * eventData.Speed );
 				}
 			}
+
+
 
 			Velocity = eventData.PostVelocity.WithZ( 0f );
 

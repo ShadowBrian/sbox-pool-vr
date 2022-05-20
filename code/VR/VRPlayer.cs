@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
-using Sandbox;
 
 namespace Facepunch.Pool;
 
 
-public partial class VRPlayer : AnimEntity
+public partial class VRPlayer : AnimatedEntity
 {
 	[Net, Predicted] public bool Initialized { get; set; }
 	[Net, Predicted] public VRHand LH { get; set; }

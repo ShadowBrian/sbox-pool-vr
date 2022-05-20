@@ -12,7 +12,7 @@ public enum HandSide
 {
 	None, Left, Right
 }
-public partial class VRHand : AnimEntity
+public partial class VRHand : AnimatedEntity
 {
 
 	[Net] public HandSide hand { get; set; }

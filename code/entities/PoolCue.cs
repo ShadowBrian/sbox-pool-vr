@@ -93,7 +93,7 @@ namespace Facepunch.Pool
 			else
 			{
 
-				if ( !Input.Down( InputButton.Attack1 ) )
+				if ( !Input.Down( InputButton.PrimaryAttack ) )
 				{
 					UpdateAimDir( controller, whiteBall.Position );
 
@@ -266,7 +266,7 @@ namespace Facepunch.Pool
 
 			whiteBall.TryMoveTo( cursorTrace.EndPosition, whiteAreaWorldOBB );
 
-			if ( Input.Released( InputButton.Attack1 ) )
+			if ( Input.Released( InputButton.PrimaryAttack ) )
 				controller.StopPlacingWhiteBall();
 
 			if ( Input.VR.RightHand.ButtonA.IsPressed )
@@ -274,6 +274,8 @@ namespace Facepunch.Pool
 				controller.StopPlacingWhiteBall();
 			}
 		}
+
+		[Net] Vector3 VRHandStartPos { get; set; }
 
 		private void HandlePowerSelection( Player controller )
 		{
@@ -289,14 +291,15 @@ namespace Facepunch.Pool
 
 				var cursorPlaneEndPos = tablePlane.Trace( new Ray( pointerTransform.Position, pointerTransform.Rotation.Forward ), true );
 
-				var distanceToCue = cursorPlaneEndPos.Value.Distance( Position - Rotation.Forward * 100f );
+				var distanceToCue = VRHandStartPos.Distance( pointerTransform.Position );//cursorPlaneEndPos.Value.Distance( Position - Rotation.Forward * 100f );
 
-				var cuePullBackDelta = (_lastPowerDistance - distanceToCue) * Time.Delta * 20f;
+				var cuePullBackDelta = (distanceToCue - _lastPowerDistance) * Time.Delta * 20f;
 
 				if ( !IsMakingShot )
 				{
 					_lastPowerDistance = 0f;
 					cuePullBackDelta = 0f;
+					VRHandStartPos = pointerTransform.Position;
 				}
 
 				_cuePullBackOffset = Math.Clamp( _cuePullBackOffset + cuePullBackDelta, 0f, 8f );

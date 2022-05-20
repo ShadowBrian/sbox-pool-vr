@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 namespace Facepunch.Pool
 {
 	[Library( "pool_ball_spawn" )]
-	[Hammer.EditorModel( "models/pool/pool_ball.vmdl" )]
+	[EditorModel( "models/pool/pool_ball.vmdl" )]
 	[Display( Name = "Ball Spawnpoint", GroupName = "Pool" )]
-	[Hammer.Model]
+	[SandboxEditor.Model]
 	public partial class PoolBallSpawn : ModelEntity
 	{
 		[Property]

@@ -41,7 +41,7 @@ namespace Facepunch.Pool
 		private Dictionary<long, int> _ratings;
 		private BaseRound _lastRound;
 
-		[ServerVar( "pool_min_players", Help = "The minimum players required to start." )]
+		[ConVar.Server( "pool_min_players", Help = "The minimum players required to start." )]
 		public static int MinPlayers { get; set; } = 2;
 
 		public Game()
@@ -82,7 +82,7 @@ namespace Facepunch.Pool
 			//
 			BaseViewModel.UpdateAllPostCamera( ref camSetup );
 
-			CameraModifier.Apply( ref camSetup );
+			//CameraModifier.Apply( ref camSetup );
 		}
 
 		public async Task RespawnBallAsync( PoolBall ball, bool shouldAnimate = false )
@@ -226,7 +226,7 @@ namespace Facepunch.Pool
 				}
 				else
 				{
-					Log.Warning( entity.EngineEntityName + " was not a spawner!" );
+					Log.Warning( entity.Name + " was not a spawner!" );
 				}
 			}
 		}
